@@ -1,10 +1,9 @@
 import re
 import os
 import shutil
-import pickle
 
-from scanpdf.lex import lex
-from scanpdf.parse import parse
+from pdftoregs.lex import lex
+from pdftoregs.parse import parse
 
 module_dir = os.path.dirname(os.path.abspath(__file__))
 

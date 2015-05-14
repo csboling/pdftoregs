@@ -1,6 +1,6 @@
 import subprocess
 
-import scanpdf.lex.register as register
+import pdftoregs.lex.register as register
 
 class LexPDF:
   def __init__(self, name,
