@@ -1,7 +1,7 @@
 import unittest
 import collections
 import itertools
-import echem.utils.scanpdf.datastruct.tree as uut
+import pdftoregs.datastruct.tree as uut
 
 class TestTree(unittest.TestCase):
   @classmethod
@@ -50,8 +50,6 @@ class TestTree(unittest.TestCase):
                            '|   |   +-- farright',
                            '|   |   |   +-- leafD',
                           '']))
-    c = t.map(self.Counter)
-    print(c)
 
 if __name__ == '__main__':
   unittest.main()

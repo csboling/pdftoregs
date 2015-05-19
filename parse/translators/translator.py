@@ -53,6 +53,7 @@ class BaseTranslator:
     return ret
 
   def encode(self, ctx, v):
+    print('getting encoder for {}'.format(type(v)))
     emitter = self.node_encoders[type(v)](v)
     return emitter.inherit_ctx(ctx)
 

@@ -6,12 +6,13 @@ class ToC:
   out of a table of contents, given appropriate regexes.
   """
   def __init__(self, name, text,
-               section_re, entry_re):
+               section_re, entry_re,
+               extras):
     self.t = RegexTree(DeviceNode(name),
                        [(section_re, PeripheralNode),
                         (entry_re,   RegisterNode)])
     self.t.build(text)
-    self.t.root.prune(depth=1)
+    self.extras = extras
 
   def __str__(self):
     return str(self.t.root)
@@ -25,6 +26,14 @@ class ToC:
 
   def __next__(self):
     for node in self._nodes:
+      if isinstance(node.value, PeripheralNode):
+        try:
+          extra_reg = self.extras[node.value.name]
+        except KeyError:
+          extra_reg = []
+        for regfields in extra_reg:
+          node.add(RegisterNode.create(regfields))
+        continue
       if isinstance(node.value, RegisterNode):
         return node
     raise StopIteration
@@ -75,6 +84,7 @@ class DeviceNode:
 class PeripheralNode:
   def __init__(self, match):
     section = match.group('section')
+    print(section)
     m = re.search(r'[\w\s]*\((?P<name>\w+)\)[\w\s]*', section)
     if m:
       self.name = m.group('name')
@@ -93,6 +103,14 @@ class RegisterNode:
     except TypeError:
       self.reset = 0
     self.page   = int(match.group('pagenum'))
+
+  @staticmethod
+  def create(fields):
+    """Alternate constructor, directly from dict of values instead of regex match.
+    """
+    self = object.__new__(RegisterNode)
+    self.__dict__.update(fields)
+    return self
 
   def __str__(self):
     return 'Reg {} p{}'.format(self.name, self.page)
@@ -139,7 +157,7 @@ class BitfieldNode:
     else:
       self.logbits = self.get_slice(*logbits)
     self.reset    = int(match.group('reset'), 16)
-    print('    bitfield: {} [{}:{}]'.format(self.name, *self.physbits))
+#    print('    bitfield: {} [{}:{}]'.format(self.name, *self.physbits))
 
   def __str__(self):
     return self.name

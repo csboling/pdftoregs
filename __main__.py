@@ -1,3 +1,4 @@
+import ast
 import re
 import os
 import shutil
@@ -18,7 +19,9 @@ def lex_manual(name, settings):
                                              'BitfieldLine',
                                             ] },
                      exceptions = settings['RegisterExceptions'])
-  lexer.build(settings['EndOfToC'], settings['SubsequentPages'])
+  lexer.build(settings['EndOfToC'],
+              settings['SubsequentPages'],
+              settings['ExtraEntries'])
   if lexer.exceptions:
     print('Skipped/could not lex: ' + '\n'.join(map(str, lexer.exceptions)))
   return lexer.toc.t.root
@@ -80,6 +83,7 @@ def get_cfg(args):
                  ('SubsequentPages',     int),
                  ('EndOfToC',            int),
                  ('RegisterExceptions',  str.split),
+                 ('ExtraEntries',        ast.literal_eval),
 
                  ('SectionRegex',        compileVerbose),
                  ('RegisterRegex',       compileVerbose),

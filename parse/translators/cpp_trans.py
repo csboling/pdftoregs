@@ -87,7 +87,8 @@ class CppFile(NodeTemplate):
     self.baseclass = baseclass
 
   def __enter__(self):
-    self.outf = Indent(open(self.name + self.extension, 'w'))
+    fname = re.sub('/', '_', self.name + self.extension)
+    self.outf = Indent(open(fname, 'w'))
     return self
 
   def __exit__(self, *args, **kwargs):
