@@ -78,8 +78,8 @@ class Translator(BaseTranslator):
       return abs(bits[0] - bits[1]) + 1
 
     def __enter__(self):
-      self.parent_ctx.hdrf.writeln('uint8_t {name} : {width};'.format(name=self.node.name,
-                                                                      width=self.bitlen(self.node.physbits)))
+      self.parent_ctx.hdrf.writeln('uint16_t {name} : {width};'.format(name=self.node.name,
+                                                                       width=self.bitlen(self.node.physbits)))
       self.parent_ctx.struct.field_ct += 1
 
 class CppFile(NodeTemplate):
@@ -235,7 +235,7 @@ class CppMemberInit:
   def __enter__(self):
     self.outf.writeln(('{cls}::{name} = '
                        '(volatile ioport union {name}_t *) '
-                       '0x{addr:08x};').format(cls=self.cls,
+                       '0x{addr:04x};').format(cls=self.cls,
                                                name=self.name,
                                                addr=self.addr))
 
