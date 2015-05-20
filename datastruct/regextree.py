@@ -10,6 +10,7 @@ class RegexTree:
   def __init__(self, name, levels):
     self.levels = list(map(self.compile_pair, levels))
     self.depth = 0
+    self.proceed = True
     self.root = Tree([name])
     self._t = self.root
 

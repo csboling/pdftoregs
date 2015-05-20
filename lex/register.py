@@ -76,6 +76,7 @@ class FilterTree(RegexTree):
 
 class DeviceNode:
   def __init__(self, name):
+    super().__init__()
     self.name = name
 
   def __str__(self):
@@ -83,6 +84,7 @@ class DeviceNode:
 
 class PeripheralNode:
   def __init__(self, match):
+    super().__init__()
     section = match.group('section')
     print(section)
     m = re.search(r'[\w\s]*\((?P<name>\w+)\)[\w\s]*', section)
@@ -145,28 +147,43 @@ class BitfieldTree:
 
 class BitfieldNode:
   reserved_ct = 0
+  proceed = True
 
   @staticmethod
   def get_slice(hi, lo):
     return (int(hi), int(lo) if lo else int(hi))
 
-  def __init__(self, match):
+  def __new__(cls, match):
+    self = object.__new__(cls)
+
     self.name = match.group('fieldname')
     if re.search('Reserved', self.name):
       self.name = 'RESERVED{}'.format(BitfieldNode.reserved_ct)
-      BitfieldNode.reserved_ct += 1
+      __class__.reserved_ct += 1
+
     self.physbits = self.get_slice(match.group('hibit'),
                                    match.group('lobit'))
+
+    if self.physbits[0] == 15:
+      __class__.proceed = True
+    if not __class__.proceed:
+      return None
+    if self.physbits[1] == 0:
+      __class__.proceed = False
+
     logbits = match.group('hibit_log'), match.group('lobit_log')
     if logbits == (None, None):
       self.logbits = self.physbits
     else:
       self.logbits = self.get_slice(*logbits)
+
     try:
       self.reset = int(match.group('reset'), 16)
     except (TypeError, IndexError):
       self.reset = 0
+
     print('    bitfield: {} [{}:{}]'.format(self.name, *self.physbits))
+    return self
 
   def __str__(self):
     return self.name
