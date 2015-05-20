@@ -133,6 +133,7 @@ class BitfieldTree:
       candidates.append(merged)
     except TypeError:
       pass
+    print()
     print('name {}, candidates {}'.format(self.name, candidates))
     if self.name in candidates:
       return False
@@ -158,7 +159,7 @@ class BitfieldNode:
 
     self.name = match.group('fieldname')
     if re.search('Reserved', self.name):
-      self.name = 'RESERVED{}'.format(BitfieldNode.reserved_ct)
+      self.name = '__reserved{}'.format(BitfieldNode.reserved_ct)
       __class__.reserved_ct += 1
 
     self.physbits = self.get_slice(match.group('hibit'),

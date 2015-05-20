@@ -80,6 +80,7 @@ class Translator(BaseTranslator):
     def __enter__(self):
       self.parent_ctx.hdrf.writeln('uint8_t {name} : {width};'.format(name=self.node.name,
                                                                       width=self.bitlen(self.node.physbits)))
+      self.parent_ctx.struct.field_ct += 1
 
 class CppFile(NodeTemplate):
   def __init__(self, name, baseclass=None):
@@ -99,6 +100,10 @@ class CppFile(NodeTemplate):
                      '#define __{name}_HPP_GUARD\n').format(name=self.name))
     self.outf.writeln()
     self.outf.writeln('#include <stdint.h>')
+    self.outf.writeln()
+    self.outf.writeln('#ifndef max')
+    self.outf.writeln('#define max(a, b) (((a) > (b)) ? (a) : (b))')
+    self.outf.writeln('#endif  /* #ifndef max */')
     self.outf.writeln()
 
   def unguard(self):
@@ -210,11 +215,14 @@ class CppStructUnion:
     self.outf.indent('{')
     self.outf.writeln('struct {name}_struct_t'.format(name=self.name))
     self.outf.indent('{')
+    self.field_ct = 0
     return self
 
   def __exit__(self, etype, evalue, tb):
+    if self.field_ct == 0:
+      self.outf.writeln('uint16_t nothing : 16;')
     self.outf.unindent('};')
-    self.outf.writeln('uint16_t bytes[sizeof({name}_struct_t)/2];'.format(name=self.name))
+    self.outf.writeln('uint16_t bytes[max(sizeof(struct {name}_struct_t), 1)];'.format(name=self.name))
     self.outf.unindent('}} * const {name};'.format(name=self.name))
 
 class CppMemberInit:

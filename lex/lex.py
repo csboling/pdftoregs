@@ -26,7 +26,6 @@ class LexPDF:
       return
     tablepgs = self.get_text(v.page,
                              v.page + self.subsequent_pages)
-
     try:
       for field in register.BitfieldTree(v.name, tablepgs,
                                          self.regexes['BitfieldHeader'],
