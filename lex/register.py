@@ -100,7 +100,7 @@ class RegisterNode:
     self.offset = int(match.group('offset'), 16)
     try:
       self.reset = int(match.group('reset'), 16)
-    except TypeError:
+    except (TypeError, IndexError):
       self.reset = 0
     self.page   = int(match.group('pagenum'))
 
@@ -127,10 +127,11 @@ class BitfieldTree:
     candidates = [match.group('regname')]
     try:
       # guess that the name is given by the first capital letters
-      candidates += ''.join(re.findall(r'(?<![A-Z])[A-Z]',
-                            match.group('fullname')))
+      merged = ''.join(re.findall(r'\b[A-Z]', match.group('fullname')))
+      candidates.append(merged)
     except TypeError:
       pass
+    print('name {}, candidates {}'.format(self.name, candidates))
     if self.name in candidates:
       return False
     else:
@@ -143,12 +144,17 @@ class BitfieldTree:
     return next(self._t.accepted)
 
 class BitfieldNode:
+  reserved_ct = 0
+
   @staticmethod
   def get_slice(hi, lo):
     return (int(hi), int(lo) if lo else int(hi))
 
   def __init__(self, match):
     self.name = match.group('fieldname')
+    if re.search('Reserved', self.name):
+      self.name = 'RESERVED{}'.format(BitfieldNode.reserved_ct)
+      BitfieldNode.reserved_ct += 1
     self.physbits = self.get_slice(match.group('hibit'),
                                    match.group('lobit'))
     logbits = match.group('hibit_log'), match.group('lobit_log')
@@ -156,8 +162,11 @@ class BitfieldNode:
       self.logbits = self.physbits
     else:
       self.logbits = self.get_slice(*logbits)
-    self.reset    = int(match.group('reset'), 16)
-#    print('    bitfield: {} [{}:{}]'.format(self.name, *self.physbits))
+    try:
+      self.reset = int(match.group('reset'), 16)
+    except (TypeError, IndexError):
+      self.reset = 0
+    print('    bitfield: {} [{}:{}]'.format(self.name, *self.physbits))
 
   def __str__(self):
     return self.name
