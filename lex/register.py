@@ -54,7 +54,6 @@ class FilterTree(RegexTree):
     return self
 
   def __exit__(self, etype, evalue, tb):
-    print('FilterTree got an exception: {}, {}'.format(etype, evalue))
     if isinstance(evalue, (self.Finished, type(None))):
       nodes = self.root.children.values()
       if len(nodes) == 0:
@@ -128,12 +127,22 @@ class BitfieldTree:
 
   def predicate(self, match):
     candidates = [match.group('regname')]
+
     try:
       # guess that the name is given by the first capital letters
-      merged = ''.join(re.findall(r'\b[A-Z]', match.group('fullname')))
-      candidates.append(merged)
-    except TypeError:
+      fullname = match.group('fullname')
+    except IndexError:
+      fullname = ''
+    merged = ''.join(re.findall(r'\b[A-Z]', fullname))
+    candidates.append(merged)
+
+    try:
+      # guess that the name precedes the word Register
+      previous = re.search(r'([A-Z][A-Z0-9_]+(?= Register))', fullname).group(0)
+      candidates.append(previous)
+    except (AttributeError, IndexError):
       pass
+
     print()
     print('name {}, candidates {}'.format(self.name, candidates))
     if self.name in candidates:
@@ -167,10 +176,12 @@ class BitfieldNode:
                                    match.group('lobit'))
 
     if self.physbits[0] == 15:
+      print('restarting')
       __class__.proceed = True
     if not __class__.proceed:
       return None
     if self.physbits[1] == 0:
+      print('exhausted')
       __class__.proceed = False
 
     logbits = match.group('hibit_log'), match.group('lobit_log')

@@ -44,5 +44,3 @@ class LexPDF:
     self.subsequent_pages = subsequent_pages
     for entry in self.toc:
       self.lex_entry(entry)
-      if entry.value.name == 'CLKSTOP2':
-        print(self.toc)

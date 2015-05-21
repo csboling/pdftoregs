@@ -12,7 +12,7 @@ class Translator(BaseTranslator):
 
   @staticmethod
   def unguard(name):
-    return ('#endif  /* __{name}_HPP_GUARD */\n').format(name=name)
+    return ('#endif  /* __{name}_REGS_HPP_GUARD */\n').format(name=name)
 
   class Device(NodeTemplate):
     def __enter__(self):
@@ -96,8 +96,8 @@ class CppFile(NodeTemplate):
     self.outf.close()
 
   def guard(self):
-    self.outf.write(('#ifndef __{name}_HPP_GUARD\n'
-                     '#define __{name}_HPP_GUARD\n').format(name=self.name))
+    self.outf.write(('#ifndef __{name}_REGS_HPP_GUARD\n'
+                     '#define __{name}_REGS_HPP_GUARD\n').format(name=self.name))
     self.outf.writeln()
     self.outf.writeln('#include <stdint.h>')
     self.outf.writeln()
@@ -107,7 +107,7 @@ class CppFile(NodeTemplate):
     self.outf.writeln()
 
   def unguard(self):
-    self.outf.writeln('#endif  /* __{name}_HPP_GUARD'.format(name=self.name))
+    self.outf.writeln('#endif  /* #ifndef __{name}_REGS_HPP_GUARD */'.format(name=self.name))
     self.outf.writeln()
 
   def namespace(self):
@@ -118,7 +118,7 @@ class CppFile(NodeTemplate):
     self.outf.unindent('};')
 
   def startclass(self):
-    self.outf.write('class {}'.format(self.name), indent = True)
+    self.outf.write('class {}_regs'.format(self.name), indent = True)
     if self.baseclass:
       self.outf.write(' : {baseclass}'.format(baseclass = self.baseclass))
     self.outf.write('\n')
@@ -129,33 +129,30 @@ class CppFile(NodeTemplate):
 
 class CppHeader(CppFile):
   directory = 'include'
-  extension = '.hpp'
+  extension = '_regs.hpp'
 
   def __enter__(self):
     super().__enter__()
     self.guard()
     self.namespace()
     self.startclass()
-    self.priv_ctx = self.private()
-    return self.priv_ctx.__enter__()
+    self.prot_ctx = self.protected()
+    return self.prot_ctx.__enter__()
 
   def __exit__(self, *args, **kwargs):
-    self.priv_ctx.__exit__(*args, **kwargs)
-    with self.public() as pub:
-      self.ctor()
-      self.dtor()
+    self.prot_ctx.__exit__(*args, **kwargs)
     self.stopclass()
     self.unnamespace()
     self.unguard()
     super().__exit__(self, *args, **kwargs)
 
   def inherit_ctx(self, ctx):
-    self.priv_ctx.parent_ctx = ctx
-    return self.priv_ctx
+    self.prot_ctx.parent_ctx = ctx
+    return self.prot_ctx
 
   @contextmanager
-  def private(self):
-    self.outf.writeln('private:')
+  def protected(self):
+    self.outf.writeln('protected:')
     self.outf.indent()
     yield self
     self.outf.unindent()
@@ -175,7 +172,7 @@ class CppHeader(CppFile):
 
 class CppSource(CppFile):
   directory = 'src'
-  extension = '.cpp'
+  extension = '_regs.cpp'
 
   def __enter__(self):
     super().__enter__()
@@ -184,13 +181,11 @@ class CppSource(CppFile):
     return self
 
   def __exit__(self, *args, **kwargs):
-    self.ctor()
-    self.dtor()
     self.unnamespace()
     return super().__exit__(*args, **kwargs)
 
   def include(self):
-    self.outf.writeln('#include "{name}.hpp"'.format(name=self.name))
+    self.outf.writeln('#include "{name}_regs.hpp"'.format(name=self.name))
     self.outf.writeln()
 
   def ctor(self):
@@ -201,7 +196,7 @@ class CppSource(CppFile):
 
   def dtor(self):
     self.outf.writeln()
-    self.outf.writeln('~{name}::{name}()'.format(name=self.name))
+    self.outf.writeln('{name}::~{name}()'.format(name=self.name))
     self.outf.writeln('{')
     self.outf.writeln('}')
 
@@ -233,9 +228,9 @@ class CppMemberInit:
     self.outf = outf
 
   def __enter__(self):
-    self.outf.writeln(('{cls}::{name} = '
-                       '(volatile ioport union {name}_t *) '
-                       '0x{addr:04x};').format(cls=self.cls,
+    self.outf.write(('volatile ioport union {cls}::{name}_t * const {cls}::{name} = \n'
+                     '  (union {cls}::{name}_t *) '
+                     '0x{addr:04x};\n').format(cls=self.cls + '_regs',
                                                name=self.name,
                                                addr=self.addr))
 
