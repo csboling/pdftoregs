@@ -54,7 +54,8 @@ class FilterTree(RegexTree):
     return self
 
   def __exit__(self, etype, evalue, tb):
-    if isinstance(evalue, self.Finished):
+    print('FilterTree got an exception: {}, {}'.format(etype, evalue))
+    if isinstance(evalue, (self.Finished, type(None))):
       nodes = self.root.children.values()
       if len(nodes) == 0:
         raise self.Empty

@@ -28,6 +28,7 @@ class RegexTree:
           self.depth += 1
         node = factory(m)
         if node != None:
+          print('attaching {}'.format(node.name))
           self._t = self._t.add(node)
 
   def build(self, text):
