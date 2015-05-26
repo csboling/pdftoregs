@@ -118,9 +118,9 @@ class CppFile(NodeTemplate):
     self.outf.unindent('};')
 
   def startclass(self):
-    self.outf.write('class {}_regs'.format(self.name), indent = True)
+    self.outf.write('class {}_regs'.format(self.name), indent=True)
     if self.baseclass:
-      self.outf.write(' : {baseclass}'.format(baseclass = self.baseclass))
+      self.outf.write(' : {baseclass}'.format(baseclass=self.baseclass))
     self.outf.write('\n')
     self.outf.indent('{')
 
@@ -216,7 +216,7 @@ class CppStructUnion:
   def __exit__(self, etype, evalue, tb):
     if self.field_ct == 0:
       self.outf.writeln('uint16_t nothing : 16;')
-    self.outf.unindent('};')
+    self.outf.unindent('} bits;')
     self.outf.writeln('uint16_t bytes[max(sizeof(struct {name}_struct_t), 1)];'.format(name=self.name))
     self.outf.unindent('}} * const {name};'.format(name=self.name))
 
@@ -229,10 +229,11 @@ class CppMemberInit:
 
   def __enter__(self):
     self.outf.write(('volatile ioport union {cls}::{name}_t * const {cls}::{name} = \n'
-                     '  (union {cls}::{name}_t *) '
+                     '  (ioport union {cls}::{name}_t *) '
                      '0x{addr:04x};\n').format(cls=self.cls + '_regs',
                                                name=self.name,
-                                               addr=self.addr))
+                                               addr=self.addr),
+                     indent=True)
 
   def __exit__(self, etype, evalue, tb):
     pass
