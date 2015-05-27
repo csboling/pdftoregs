@@ -115,7 +115,7 @@ class CppFile(NodeTemplate):
     self.outf.indent('{')
 
   def unnamespace(self):
-    self.outf.unindent('};')
+    self.outf.unindent('}')
 
   def startclass(self):
     self.outf.write('class {}_regs'.format(self.name), indent=True)
