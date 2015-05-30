@@ -40,7 +40,9 @@ class ToC:
 
 class FilterTree(RegexTree):
   class Finished(Exception):
-    pass
+    def __init__(self, ok):
+      self.ok = ok
+
   class Empty(Exception):
     pass
 
@@ -49,6 +51,7 @@ class FilterTree(RegexTree):
                levels):
     super().__init__(name, [(filter_re, self.factory)] + levels)
     self.predicate = predicate
+    self.tablematches = 0
 
   def __enter__(self):
     return self
@@ -60,18 +63,21 @@ class FilterTree(RegexTree):
         raise self.Empty
       else:
         self.accepted = iter(nodes)
-      return True
+        return True
     else:
       self.accepted = iter([])
 
-  def factory(self, match):
-    if self.predicate(match):
-      raise self.Finished
-    else:
-      return None
+  def factory(self, ctx, match):
+    result = self.predicate(match)
+    if result == 'newtable':
+      if self.tablematches > 0:
+        raise self.Finished(True)
+    elif result == 'nameok':
+      self.tablematches += 1
+    return (self, None)
 
   def build(self, text):
-    with self as ft:
+    with self:
       super().build(text)
 
 class DeviceNode:
@@ -83,7 +89,7 @@ class DeviceNode:
     return self.name
 
 class PeripheralNode:
-  def __init__(self, match):
+  def __init__(self, ctx, match):
     super().__init__()
     section = match.group('section')
     print(section)
@@ -97,7 +103,7 @@ class PeripheralNode:
     return self.name
 
 class RegisterNode:
-  def __init__(self, match):
+  def __init__(self, ctx, match):
     self.name   = match.group('regname')
     self.offset = int(match.group('offset'), 16)
     try:
@@ -122,7 +128,7 @@ class BitfieldTree:
     self.name = name
     self._t = FilterTree(self.name,
                          header_re, self.predicate,
-                         [(line_re, BitfieldNode)])
+                         [(line_re, BitfieldNode.factory)])
     self._t.build(text)
 
   def predicate(self, match):
@@ -146,9 +152,9 @@ class BitfieldTree:
     print()
     print('name {}, candidates {}'.format(self.name, candidates))
     if self.name in candidates:
-      return False
+      return 'nameok'
     else:
-      return True
+      return 'newtable'
 
   def __iter__(self):
     return self
@@ -164,8 +170,12 @@ class BitfieldNode:
   def get_slice(hi, lo):
     return (int(hi), int(lo) if lo else int(hi))
 
-  def __new__(cls, match):
-    self = object.__new__(cls)
+  @staticmethod
+  def factory(ctx, match):
+    if ctx:
+      if ctx.tablematches < 1:
+        return (ctx, None)
+    self = BitfieldNode()
 
     self.name = match.group('fieldname')
     if re.search('Reserved', self.name):
@@ -179,7 +189,7 @@ class BitfieldNode:
       print('restarting')
       __class__.proceed = True
     if not __class__.proceed:
-      return None
+      return (ctx, None)
     if self.physbits[1] == 0:
       print('exhausted')
       __class__.proceed = False
@@ -196,7 +206,7 @@ class BitfieldNode:
       self.reset = 0
 
     print('    bitfield: {} [{}:{}]'.format(self.name, *self.physbits))
-    return self
+    return (ctx, self)
 
   def __str__(self):
     return self.name

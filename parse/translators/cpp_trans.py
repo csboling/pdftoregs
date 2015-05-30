@@ -185,7 +185,7 @@ class CppSource(CppFile):
     return super().__exit__(*args, **kwargs)
 
   def include(self):
-    self.outf.writeln('#include "{name}_regs.hpp"'.format(name=self.name))
+    self.outf.writeln('#include "periph/regs/{name}_regs.hpp"'.format(name=self.name))
     self.outf.writeln()
 
   def ctor(self):

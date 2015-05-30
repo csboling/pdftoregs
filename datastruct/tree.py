@@ -11,7 +11,7 @@ class Tree:
   def __init__(self, nodes=None):
     self.parent = None
     self.depth = 0
-    self.children = collections.OrderedDict()
+    self.reset()
     if nodes:
       self.value, *children = nodes
       for c in children:
@@ -84,6 +84,9 @@ class Tree:
     if self.depth < depth:
       for c in self.children.values():
         c.prune(depth, threshold)
+
+  def reset(self):
+    self.children = collections.OrderedDict()
 
   ###
   # Navigation
