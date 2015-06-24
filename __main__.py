@@ -3,16 +3,22 @@ import re
 import os
 import shutil
 import urllib.request
+import urllib.error
 
 from pdftoregs.lex import lex
 from pdftoregs.parse import parse
 
 module_dir = os.path.dirname(os.path.abspath(__file__))
 
-def getfile(url_or_path, fname):
+def getfile(url, fname):
   if not os.path.exists(fname):
     os.makedirs(os.path.dirname(fname), exist_ok=True)
-    urllib.request.urlretrieve(url_or_path, fname)
+    print('attempting to download {}'.format(url_or_path))
+    try:
+      urllib.request.urlretrieve(url_or_path, fname)
+    except urllib.error.HTTPError:
+      print('File {} not found and URL {} could not be accessed. Please download the file manually.'.format(fname, url))
+      exit()
 
 def lex_manual(name, settings):
   getfile(settings['PdfUrl'], settings['PdfFname'])
