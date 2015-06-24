@@ -99,7 +99,10 @@ class CppFile(NodeTemplate):
     self.outf.write(('#ifndef __{name}_REGS_HPP_GUARD\n'
                      '#define __{name}_REGS_HPP_GUARD\n').format(name=self.name))
     self.outf.writeln()
+    self.outf.writeln('extern "C"');
+    self.outf.indent('{')
     self.outf.writeln('#include <stdint.h>')
+    self.outf.unindent('};')
     self.outf.writeln()
     self.outf.writeln('#ifndef max')
     self.outf.writeln('#define max(a, b) (((a) > (b)) ? (a) : (b))')
@@ -107,6 +110,8 @@ class CppFile(NodeTemplate):
     self.outf.writeln()
 
   def unguard(self):
+    self.outf.writeln('#undef max')
+    self.outf.writeln()
     self.outf.writeln('#endif  /* #ifndef __{name}_REGS_HPP_GUARD */'.format(name=self.name))
     self.outf.writeln()
 
