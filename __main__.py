@@ -2,16 +2,23 @@ import ast
 import re
 import os
 import shutil
+import urllib.request
 
 from pdftoregs.lex import lex
 from pdftoregs.parse import parse
 
 module_dir = os.path.dirname(os.path.abspath(__file__))
 
+def getfile(url_or_path, fname):
+  if not os.path.exists(fname):
+    os.makedirs(os.path.dirname(fname), exist_ok=True)
+    urllib.request.urlretrieve(url_or_path, fname)
+
 def lex_manual(name, settings):
+  getfile(settings['PdfUrl'], settings['PdfFname'])
   lexer = lex.LexPDF(name      = name,
                      pdftotext = settings['PdfToTextBin'],
-                     pdf_fname = settings['PdfManual'],
+                     pdf_fname = settings['PdfFname'],
                      regexes   = { k : settings[k + 'Regex']
                                    for k in ['Section',
                                              'Register',
@@ -79,7 +86,8 @@ def get_cfg(args):
                  ('OutputDir',           path),
 
                  ('PdfToTextBin',        shutil.which),
-                 ('PdfManual',           path),
+                 ('PdfUrl',              str),
+                 ('PdfFname',            path),
                  ('SubsequentPages',     int),
                  ('EndOfToC',            int),
                  ('RegisterExceptions',  str.split),
