@@ -39,7 +39,6 @@ def parse_registers(lang, tree):
 
 def main(name, settings):
   pdftotext   = settings['PdfToTextBin']
-  infile      = settings['PdfManual']
   lastToCPage = settings['EndOfToC']
 
   toc = lex_manual(name, settings)
