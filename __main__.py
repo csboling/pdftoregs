@@ -13,9 +13,9 @@ module_dir = os.path.dirname(os.path.abspath(__file__))
 def getfile(url, fname):
   if not os.path.exists(fname):
     os.makedirs(os.path.dirname(fname), exist_ok=True)
-    print('attempting to download {}'.format(url_or_path))
+    print('attempting to download {}'.format(url))
     try:
-      urllib.request.urlretrieve(url_or_path, fname)
+      urllib.request.urlretrieve(url, fname)
     except urllib.error.HTTPError:
       print('File {} not found and URL {} could not be accessed. Please download the file manually.'.format(fname, url))
       exit()
