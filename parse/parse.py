@@ -8,6 +8,7 @@ class CodeGenerator:
 
   def write(self, outdir):
     for unit in self.translator:
+      print('unit: {}'.format(node.name))
       with os.path.join(outdir,
                         node.name + node.extension + '.auto', 'w') as f:
         f.write(unit)

@@ -50,8 +50,11 @@ def main(name, settings):
   toc = lex_manual(name, settings)
   print(toc)
 
-  source = parse.CodeGenerator(settings['OutputLanguage'], toc,
-                               { 'OutputDir' : settings['OutputDir'] })
+  source = parse.CodeGenerator(settings['OutputLanguage'],
+                               toc,
+                               { 'OutputDir'      : settings['OutputDir'],
+                                 'ExcludePeriphs' : settings['ExcludePeriphs']
+                               })
 
 def get_args():
   import argparse
@@ -96,6 +99,7 @@ def get_cfg(args):
                  ('SubsequentPages',     int),
                  ('EndOfToC',            int),
                  ('RegisterExceptions',  str.split),
+                 ('ExcludePeriphs',      str.split),
                  ('ExtraEntries',        ast.literal_eval),
 
                  ('SectionRegex',        compileVerbose),

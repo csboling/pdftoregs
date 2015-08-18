@@ -7,6 +7,9 @@ from ..codegen import Indent
 join = os.path.join
 
 class Translator(BaseTranslator):
+  class Skip(Exception):
+    pass
+
   def __init__(self):
     pass
 
@@ -21,6 +24,8 @@ class Translator(BaseTranslator):
       return self
 
     def __exit__(self, etype, evalue, tb):
+      if isinstance(evalue, Translator.Skip):
+        return True
       os.chdir(self.oldpwd)
 
     def inherit_ctx(self, ctx):
@@ -38,9 +43,13 @@ class Translator(BaseTranslator):
         name = m.group('name')
       else:
         name = node.name
+
       self.node.name = re.sub(r'\s', '_', name.strip())
 
     def inherit_ctx(self, ctx):
+      if self.node.name in ctx.parent_ctx.params['ExcludePeriphs']:
+        print('skipping {} due to exclusion'.format(self.node.name))
+        raise Translator.Skip
       self.parent_ctx = ctx
       return self
 
